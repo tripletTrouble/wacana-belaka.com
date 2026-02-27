@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Folder, LayoutGrid } from 'lucide-vue-next';
+import { Archive, LayoutGrid, Signpost } from 'lucide-vue-next';
 import PostController from '@/actions/App/Http/Controllers/PostController';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -28,10 +28,15 @@ const mainNavItems: NavItem[] = [
 
 const postNavItems: NavItem[] = [
     {
-        title: 'My Posts',
+        title: 'Aktif',
         href: PostController.index(),
-        icon: Folder,
+        icon: Signpost,
     },
+    {
+        title: 'Arsip',
+        href: PostController.archived(),
+        icon: Archive,
+    }
 ];
 
 const footerNavItems: NavItem[] = [];

@@ -3,42 +3,92 @@ import { Head, useForm } from '@inertiajs/vue3';
 import StarterKit from '@tiptap/starter-kit';
 import { useEditor } from '@tiptap/vue-3';
 import { ImagePlus, Upload, Trash2, Save } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, watch, onBeforeUnmount } from 'vue';
 import PostController from '@/actions/App/Http/Controllers/PostController';
 import Heading from '@/components/Heading.vue';
+import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { TagsInput, TagsInputInput, TagsInputItem, TagsInputItemDelete, TagsInputItemText } from '@/components/ui/tags-input';
 import { Textarea } from '@/components/ui/textarea';
 import { TiptapContent, TiptapProvider, TiptapStatusBar, TiptapToolbar } from '@/components/ui/tiptap';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import type { Post } from '@/types/laravel';
 
+const props = defineProps<{
+  post?: Post
+}>()
 const editor = useEditor({
   extensions: [StarterKit],
-  content: '<p>Hello Mom!</p>',
+  content: props.post?.content || {}
 });
 
 // Form handler
 const form = useForm({
-  title: '',
-  abstract: '',
-  content: {} as Record<string, any>,
-  tags: '',
-  image: null as File | null
+  title: props.post?.title || '',
+  '_method': props.post ? 'put' : 'post',
+  excerpt: props.post?.excerpt || '',
+  content: props.post?.content || {} as Record<string, any>,
+  tags: props.post?.tags || [] as string[],
+  image: null as File | null,
+  remove_featured_image: false
 });
 
 function handleSubmit() {
   form.image = imageFile.value;
+  // ensure remove flag is sent when user intentionally removed existing image
+  form.remove_featured_image = form.remove_featured_image || false;
   form.content = editor.value?.getJSON() ?? {};
-  form.post(PostController.store().url);
+  
+  if (props.post) {
+    form.post(PostController.update(props.post.id).url, {
+      forceFormData: true
+    });
+  } else {
+    form.post(PostController.store().url, {
+      forceFormData: true
+    });
+  }
 }
 
 // Image upload handling
 const fileInput = ref<HTMLInputElement | null>(null);
 const imageFile = ref<File | null>(null);
 const previewUrl = ref<string | null>(null);
+
+// Initialize previewUrl reactively when `props.post` becomes available
+watch(
+  () => props.post,
+  (post) => {
+    if (!post) return;
+    const p = post as any;
+    // Prefer explicit featured image fields, then common media properties.
+    let url: any = p.featured_image_url ?? p.image_url ?? null;
+    if (!url && Array.isArray(p.media) && p.media.length > 0) {
+      const m = p.media[0] as any;
+      url = m.original_url;
+    }
+
+    if (url) {
+      previewUrl.value = url;
+    }
+  },
+  { immediate: true }
+);
+
+onBeforeUnmount(() => {
+  if (previewUrl.value && imageFile.value) {
+    // revoke only object URLs created via `URL.createObjectURL`
+    try {
+      URL.revokeObjectURL(previewUrl.value);
+    } catch (e) {
+      console.warn('Failed to revoke object URL:', e);
+    }
+  }
+});
 
 function triggerFileInput() {
   fileInput.value?.click();
@@ -53,6 +103,8 @@ function onFileChange(e: Event) {
     }
     previewUrl.value = URL.createObjectURL(file);
     imageFile.value = file;
+    // user selected a new image, cancel any remove flag
+    form.remove_featured_image = false;
   }
 }
 
@@ -64,6 +116,10 @@ function removeImage() {
   previewUrl.value = null;
   if (fileInput.value) {
     fileInput.value.value = '';
+  }
+  // If editing an existing post, mark that the featured image should be removed
+  if (props.post) {
+    form.remove_featured_image = true;
   }
 }
 
@@ -83,10 +139,11 @@ const breadcrumbs: BreadcrumbItem[] = [
   <Head title="Create post" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-8">
-      <Heading title="Create post" description="Create a new post" />
+      <Heading title="Tulisan baru" description="Buat tulisan terbaikmu, sekarang!" />
       <div class="grid space-y-3 mb-4">
         <Label for="title">Judul</Label>
         <Input type="text" id="title" name="title" v-model="form.title" />
+        <InputError :message="form.errors.title" />
       </div>
       <div class="grid space-y-3 mb-4">
         <Label for="image">Gambar Sampul</Label>
@@ -110,7 +167,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
                 <div class="flex gap-2 justify-center">
                   <Button variant="outline" @click="triggerFileInput">
-                    <Upload/>
+                    <Upload />
                     Unggah
                   </Button>
                 </div>
@@ -118,11 +175,14 @@ const breadcrumbs: BreadcrumbItem[] = [
             </template>
           </div>
         </div>
-        <input ref="fileInput" @change="onFileChange" accept="image/*" type="file" id="image" name="image" class="hidden" />
+        <input ref="fileInput" @change="onFileChange" accept="image/*" type="file" id="image" name="image"
+          class="hidden" />
+        <InputError :message="form.errors.image" />
       </div>
       <div class="grid space-y-3 mb-4">
-        <Label for="abstract">Abstrak</Label>
-        <Textarea id="abstract" name="abstract" v-model="form.abstract" />
+        <Label for="excerpt">Ringkasan</Label>
+        <Textarea id="excerpt" name="excerpt" v-model="form.excerpt" />
+        <InputError :message="form.errors.excerpt" />
       </div>
       <div class="grid space-y-3 mb-4">
         <Label for="content">Konten</Label>
@@ -133,14 +193,26 @@ const breadcrumbs: BreadcrumbItem[] = [
             <TiptapStatusBar show-word-count />
           </TiptapProvider>
         </div>
+        <InputError :message="form.errors.content" />
       </div>
       <div class="grid space-y-3 mb-4">
-        <Label for="title">Tags</Label>
-        <Input type="text" id="title" name="title" v-model="form.tags" />
+        <Label for="tags">Tags</Label>
+        <TagsInput v-model:modelValue="form.tags">
+          <template #default="{ modelValue }">
+            <div class="flex flex-wrap gap-2 items-center">
+              <TagsInputItem v-for="(tag, idx) in modelValue" :key="idx" :value="tag">
+                <TagsInputItemText>{{ tag }}</TagsInputItemText>
+                <TagsInputItemDelete />
+              </TagsInputItem>
+              <TagsInputInput placeholder="Tambah tag" />
+            </div>
+          </template>
+        </TagsInput>
+        <InputError :message="form.errors.tags" />
       </div>
       <div class="text-end">
-        <Button type="submit" @click="handleSubmit">
-          <Spinner v-if="form.processing"/>
+        <Button type="submit" @click="handleSubmit" :disabled="form.processing">
+          <Spinner v-if="form.processing" />
           <Save v-else />
           Simpan
         </Button>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { MoreVertical, Edit, Archive, Plus } from 'lucide-vue-next';
+import { MoreVertical } from 'lucide-vue-next';
 import { onUnmounted } from 'vue';
 import { toast } from 'vue-sonner';
 import PostController from '@/actions/App/Http/Controllers/PostController';
@@ -24,7 +24,7 @@ import {
 import { confirm } from '@/composables/useConfirm';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import type { PaginatedPosts } from '@/types/laravel';
+import type { PaginatedPosts, Post } from '@/types/laravel';
 import { formatRelative } from '@/utils/datetime';
 
 interface Props {
@@ -33,27 +33,37 @@ interface Props {
 
 defineProps<Props>();
 
-async function openDelete(post: any) {
+async function openRestore(post: Post) {
   const confirmed = await confirm({
-    title: 'Arsipkan tulisan',
-    description: 'Anda yakin ingin mengarsipkan tulisan ini?',
-    confirmText: 'Arsipkan',
+    title: 'Pulihkan tulisan',
+    description: 'Anda yakin ingin memulihkan tulisan ini?',
+    confirmText: 'Pulihkan',
+    cancelText: 'Batal',
+  })
+
+  if (!confirmed) return
+
+  router.post(PostController.restore(post.id), { method: 'post' })
+}
+
+async function openForceDelete(post: Post) {
+  const confirmed = await confirm({
+    title: 'Hapus permanen',
+    description: 'Menghapus permanen akan menghilangkan tulisan ini tanpa bisa dikembalikan. Lanjutkan?',
+    confirmText: 'Hapus Permanen',
     cancelText: 'Batal',
     destructive: true,
   })
 
   if (!confirmed) return
 
-  // perform deletion via Inertia so page state / flash messages are preserved
-  router.visit(PostController.destroy.delete(post.id).url, { method: 'delete' })
+  router.post(PostController.forceDelete(post.id), { method: 'delete' })
 }
-
-
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
     title: 'Posts',
-    href: PostController.index().url,
+    href: '/posts',
   },
 ];
 
@@ -72,17 +82,14 @@ onUnmounted(router.on('flash', (event) => {
 
 <template>
 
-  <Head title="Posts" />
+  <Head title="Archived Posts" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4">
       <div class="flex justify-between items-start">
-        <Heading title="Tulisan" description="Daftar semua tulisanmu" />
+        <Heading title="Arsip tulisan" description="Daftar tulisan yang telah diarsipkan" />
         <div role="toolbar">
           <Button as-child>
-            <Link :href="PostController.create().url" class="flex items-center gap-2">
-              <Plus />
-              Tambah
-            </Link>
+            <Link href="/posts" class="flex items-center gap-2">Kembali</Link>
           </Button>
         </div>
       </div>
@@ -93,7 +100,7 @@ onUnmounted(router.on('flash', (event) => {
               <TableHead>Judul</TableHead>
               <TableHead>Penulis</TableHead>
               <TableHead>Dibuat</TableHead>
-              <TableHead>Diterbitkan</TableHead>
+              <TableHead>Diarsipkan</TableHead>
               <TableHead class="text-center">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -102,7 +109,7 @@ onUnmounted(router.on('flash', (event) => {
               <TableCell>{{ post.title }}</TableCell>
               <TableCell>{{ post.user?.name ?? '—' }}</TableCell>
               <TableCell>{{ formatRelative(post.created_at) }}</TableCell>
-              <TableCell>{{ formatRelative(post.published_at) }}</TableCell>
+              <TableCell>{{ formatRelative(post.deleted_at) }}</TableCell>
               <TableCell class="text-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger as-child>
@@ -112,21 +119,17 @@ onUnmounted(router.on('flash', (event) => {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent side="left">
-                    <DropdownMenuItem as-child>
-                      <Link :href="PostController.edit(post.id).url" class="flex items-center gap-2">
-                        <Edit class="size-4" />
-                        Edit
-                      </Link>
+                    <DropdownMenuItem @click="openRestore(post)">
+                      Pulihkan
                     </DropdownMenuItem>
-                    <DropdownMenuItem @click="openDelete(post)" variant="destructive">
-                      <Archive class="size-4" />
-                      Arsipkan
+                    <DropdownMenuItem @click="openForceDelete(post)" variant="destructive">
+                      Hapus Permanen
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-            <TableEmpty v-if="!posts?.data || posts.data.length === 0" :colspan="5">Belum ada tulisan.</TableEmpty>
+            <TableEmpty v-if="!posts?.data || posts.data.length === 0" :colspan="4">No archived posts found.</TableEmpty>
           </TableBody>
         </Table>
       </div>

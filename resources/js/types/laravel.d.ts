@@ -80,6 +80,32 @@ export interface PostCategory {
   updated_at: string | null;
 }
 
+// Spatie Media model serialized shape. Exported so other types can reference it.
+export interface Media {
+  id: number;
+  model_type?: string | null;
+  model_id?: number | null;
+  uuid?: string | null;
+  collection_name?: string | null;
+  name?: string | null;
+  file_name?: string | null;
+  mime_type?: string | null;
+  disk?: string | null;
+  size?: number | null;
+  manipulations?: Record<string, any> | null;
+  custom_properties?: Record<string, any> | null;
+  generated_conversions?: Record<string, boolean> | null;
+  responsive_images?: Record<string, any> | null;
+  order_column?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  url?: string | null;
+  full_url?: string | null;
+  original_url?: string | null;
+  getFullUrl?: any;
+  getUrl?: any;
+}
+
 export interface Post {
   id: number;
   post_category_id: number;
@@ -87,12 +113,17 @@ export interface Post {
   slug: string;
   content: string;
   excerpt: string | null;
-  tags: string | null;
+  tags: string[] | null;
   user_id: number;
+  // Optional relation populated by eager loading (e.g. `with('user')`) when available
+  user?: User | null;
   published_at: string | null;
   deleted_at?: string | null; // soft deletes
-  created_at: string | null;
-  updated_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Spatie media library convenience fields (may be added server-side)
+  featured_image?: Media | null;
+  media?: Media[];
 }
 
 // Convenience aliases
