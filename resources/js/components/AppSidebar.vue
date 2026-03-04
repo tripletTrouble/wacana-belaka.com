@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { Archive, LayoutGrid, Signpost } from 'lucide-vue-next';
+import PostController from '@/actions/App/Http/Controllers/PostController';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -25,18 +26,20 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const footerNavItems: NavItem[] = [
+const postNavItems: NavItem[] = [
     {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
+        title: 'Aktif',
+        href: PostController.index(),
+        icon: Signpost,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
+        title: 'Arsip',
+        href: PostController.archived(),
+        icon: Archive,
+    }
 ];
+
+const footerNavItems: NavItem[] = [];
 </script>
 
 <template>
@@ -55,6 +58,7 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain :items="postNavItems" label="Post" />
         </SidebarContent>
 
         <SidebarFooter>

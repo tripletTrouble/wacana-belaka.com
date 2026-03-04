@@ -29,3 +29,4 @@ Route::middleware('guest')->group(function () {
 });
 
 require __DIR__ . '/settings.php';
+require __DIR__ . '/posts.php';
