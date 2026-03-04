@@ -26,6 +26,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('settings/Appearance');
     })->name('appearance.edit');
 
+    // Post categories management
+    Route::get('post-categories', [\App\Http\Controllers\CategoryController::class, 'index'])
+        ->name('settings.post-categories.index');
+
+    Route::post('post-categories', [\App\Http\Controllers\CategoryController::class, 'store'])
+        ->name('post-categories.store');
+
+    Route::put('post-categories/{postCategory}', [\App\Http\Controllers\CategoryController::class, 'update'])
+        ->name('post-categories.update');
+
+    Route::delete('post-categories/{postCategory}', [\App\Http\Controllers\CategoryController::class, 'destroy'])
+        ->name('post-categories.destroy');
+
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 });

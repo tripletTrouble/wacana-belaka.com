@@ -46,9 +46,7 @@ class PostController extends Controller
         ]);
 
         $validated['content'] = (new \Tiptap\Editor)->sanitize($validated['content']);
-        $validated['slug'] = \Str::slug($validated['title']) . '-' . \Str::uuid()->toString();
-
-        dd($validated);
+        $validated['slug'] = \Str::of($validated['title'])->limit(219)->slug() . '-' . \Str::uuid()->toString();
 
         /**
          * @var \App\Models\User
@@ -124,6 +122,7 @@ class PostController extends Controller
         $posted = $request->post();
 
         $validated['content'] = (new \Tiptap\Editor)->sanitize($validated['content']);
+        $validated['slug'] = \Str::of($validated['title'])->limit(219)->slug() . '-' . \Str::uuid()->toString();
 
         $post->update(Arr::except($validated, 'featured_image'));
 

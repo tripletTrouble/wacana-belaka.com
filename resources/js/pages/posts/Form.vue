@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, Form } from '@inertiajs/vue3';
 import StarterKit from '@tiptap/starter-kit';
 import { useEditor } from '@tiptap/vue-3';
 import { ImagePlus, Upload, Trash2, Save } from 'lucide-vue-next';
@@ -138,7 +138,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
   <Head title="Create post" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-8">
+    <Form v-bind="form" @submit="handleSubmit" v-slot="{ processing }">
+      <div class="p-8">
       <Heading title="Tulisan baru" description="Buat tulisan terbaikmu, sekarang!" />
       <div class="grid space-y-3 mb-4">
         <Label for="title">Judul</Label>
@@ -211,12 +212,13 @@ const breadcrumbs: BreadcrumbItem[] = [
         <InputError :message="form.errors.tags" />
       </div>
       <div class="text-end">
-        <Button type="submit" @click="handleSubmit" :disabled="form.processing">
-          <Spinner v-if="form.processing" />
+        <Button type="submit" :disabled="processing">
+          <Spinner v-if="processing" />
           <Save v-else />
           Simpan
         </Button>
       </div>
     </div>
+    </Form>
   </AppLayout>
 </template>
