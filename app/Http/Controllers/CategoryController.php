@@ -33,7 +33,7 @@ class CategoryController extends Controller
         // always generate slug in backend from the name
         $data['slug'] = Str::of(Arr::get($data, 'name'))->limit(255)->slug();
 
-        $category = PostCategory::create($data);
+        PostCategory::create($data);
 
         Inertia::flash('success', 'Kategori dibuat.');
 

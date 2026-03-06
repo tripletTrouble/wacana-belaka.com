@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RoleEnum;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')
@@ -16,4 +17,5 @@ Route::middleware('auth')
         Route::delete('/posts/{post}', 'destroy');
         Route::get('/posts/{post}', 'show')->name('posts.show');
         Route::post('/posts/{post}/toggle-publish', 'togglePublish')->name('posts.toggle-publish');
+        Route::get('/admin/posts', 'adminIndex')->name('admin.posts.index')->middleware(['role:' . RoleEnum::ADMIN->value]);
     });

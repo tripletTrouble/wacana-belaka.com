@@ -69,7 +69,9 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        //
+        return Inertia::render('posts/Show', [
+            'post' => $post->load(['category', 'media', 'user'])
+        ]);
     }
 
     /**
@@ -185,6 +187,41 @@ class PostController extends Controller
     {
         return Inertia::render('posts/Archived', [
             'posts' => fn() => Post::onlyTrashed()->with('user')->paginate(10)->withQueryString()
+        ]);
+    }
+
+    /**
+     * Display a listing of all posts for administrators.
+     */
+    public function adminIndex(Request $request)
+    {
+        $user = $request->user();
+
+        if (! $user || ! $user->hasRole('admin')) {
+            abort(403);
+        }
+
+        $query = Post::with(['user', 'category']);
+
+        // Search by title
+        if ($request->filled('q')) {
+            $q = $request->get('q');
+            $query->where('title', 'ilike', "%{$q}%");
+        }
+
+        // Filter by publish status: published, unpublished, all
+        if ($request->filled('status')) {
+            $status = $request->get('status');
+            if ($status === 'published') {
+                $query->whereNotNull('published_at');
+            } elseif ($status === 'unpublished') {
+                $query->whereNull('published_at');
+            }
+        }
+
+        return Inertia::render('admin/Posts', [
+            'posts' => fn() => $query->paginate(10)->withQueryString(),
+            'filters' => fn() => $request->only(['q', 'status']),
         ]);
     }
 

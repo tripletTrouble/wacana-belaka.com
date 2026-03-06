@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { Archive, LayoutGrid, Signpost } from 'lucide-vue-next';
+import { computed } from 'vue';
 import PostController from '@/actions/App/Http/Controllers/PostController';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -15,7 +16,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { type NavItem } from '@/types';
+import type { NavItem } from '@/types/navigation';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -26,7 +27,10 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const postNavItems: NavItem[] = [
+const page = usePage();
+const isAdmin = computed(() => page.props.auth?.is_admin ?? false);
+
+const postNavItems = computed<NavItem[]>(() => [
     {
         title: 'Aktif',
         href: PostController.index(),
@@ -36,10 +40,18 @@ const postNavItems: NavItem[] = [
         title: 'Arsip',
         href: PostController.archived(),
         icon: Archive,
+    },
+    {
+        title: 'Semua Post',
+        href: '/admin/posts',
+        icon: Signpost,
+        visible: isAdmin.value,
     }
-];
+]);
 
 const footerNavItems: NavItem[] = [];
+
+// page/isAdmin defined above
 </script>
 
 <template>

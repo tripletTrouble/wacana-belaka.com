@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { Head, router, useForm, Form } from '@inertiajs/vue3';
+import { MoreVertical, Edit, Trash2, Plus } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { toast } from 'vue-sonner';
+import CategoryController from '@/actions/App/Http/Controllers/CategoryController';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination } from '@/components/ui/pagination';
@@ -12,7 +16,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { confirm } from '@/composables/useConfirm';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { LaravelPagination } from '@/types/laravel';
-import CategoryController from '@/actions/App/Http/Controllers/CategoryController';
 
 interface Category {
   id: number;
@@ -59,7 +62,15 @@ async function removeCategory(cat: Category) {
 
   if (!ok) return;
 
-  router.delete(CategoryController.destroy.delete(cat.id).url);
+  router.delete(CategoryController.destroy.delete(cat.id).url, {
+    onFlash: (flash) => {
+      if (flash.success) {
+        toast.success(flash.success);
+      } else if (flash.error) {
+        toast.error(flash.error);
+      }
+    },
+  });
 }
 
 const breadcrumbs = [
@@ -69,13 +80,35 @@ const breadcrumbs = [
 
 function handleSubmit() {
   if (editing.value) {
-    form.put(CategoryController.update(editing.value.id).url);
+    form.put(CategoryController.update(editing.value.id).url, {
+      onSuccess: () => {
+        form.reset();
+        isOpen.value = false;
+      },
+      onFlash: (flash) => {
+        if (flash.success) {
+          toast.success(flash.success);
+        } else if (flash.error) {
+          toast.error(flash.error);
+        }
+      },
+    });
   } else {
-    form.post(CategoryController.store().url);
+    form.post(CategoryController.store().url, {
+      onSuccess: () => {
+        form.reset();
+        isOpen.value = false;
+      },
+      onFlash: (flash) => {
+        if (flash.success) {
+          toast.success(flash.success);
+        } else if (flash.error) {
+          toast.error(flash.error);
+        }
+      },
+    });
   }
 }
-
-// pagination handled by reusable component
 </script>
 
 <template>
@@ -86,35 +119,53 @@ function handleSubmit() {
       <div class="flex justify-between items-start">
         <Heading title="Kategori" description="Kelola kategori postingan" />
         <div role="toolbar">
-          <Button @click="openCreate">Tambah</Button>
+          <Button @click="openCreate">
+            <Plus />
+            Tambah
+          </Button>
         </div>
       </div>
 
-      <div class="mt-6">
+      <div class="mt-6 w-full md:w-[60%] lg:w-[50%]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nama</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead class="text-center">Aksi</TableHead>
+              <TableHead>Deskripsi</TableHead>
+              <TableHead class="text-end">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow v-for="cat in categories.data" :key="cat.id">
               <TableCell>{{ cat.name }}</TableCell>
-              <TableCell>{{ cat.slug || '—' }}</TableCell>
-              <TableCell class="text-center">
-                <div class="flex items-center justify-center gap-2">
-                  <Button variant="ghost" size="sm" @click="openEdit(cat)">Edit</Button>
-                  <Button variant="destructive" size="sm" @click="removeCategory(cat)">Hapus</Button>
-                </div>
+              <TableCell>{{ cat.description || 'Tidak ada deskripsi.' }}</TableCell>
+              <TableCell class="text-end">
+                <DropdownMenu>
+                  <DropdownMenuTrigger as-child>
+                    <Button variant="ghost" size="icon" class="h-8 w-8">
+                      <MoreVertical />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent side="left">
+                    <DropdownMenuItem @click="openEdit(cat)">
+                      <Edit class="size-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @click="removeCategory(cat)" variant="destructive">
+                      <Trash2 class="size-4" />
+                      Hapus
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
             <TableEmpty v-if="categories.data.length === 0" :colspan="3">Belum ada kategori.</TableEmpty>
           </TableBody>
         </Table>
         <div class="mt-4 flex items-center justify-end">
-          <Pagination :links="categories.links" :prev-url="categories.prev_page_url" :next-url="categories.next_page_url" />
+          <Pagination :links="categories.links" :prev-url="categories.prev_page_url"
+            :next-url="categories.next_page_url" />
         </div>
       </div>
     </div>
@@ -128,7 +179,7 @@ function handleSubmit() {
           </DialogDescription>
         </DialogHeader>
 
-        <Form v-bind="(form as any)"
+        <Form
           :action="editing ? CategoryController.update(editing?.id).url : CategoryController.store().url"
           :method="editing ? 'put' : 'post'" class="space-y-4">
           <div class="grid space-y-3">

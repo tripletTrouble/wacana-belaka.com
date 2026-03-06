@@ -11,4 +11,8 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon;
     isActive?: boolean;
+    /**
+     * Visibility flag — if `false` the item will be hidden.
+     */
+    visible?: boolean;
 };
