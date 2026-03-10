@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Archive, LayoutGrid, Signpost } from 'lucide-vue-next';
+import { Archive, LayoutGrid, Signpost, Tag } from 'lucide-vue-next';
 import { computed } from 'vue';
+import CategoryController from '@/actions/App/Http/Controllers/CategoryController';
 import PostController from '@/actions/App/Http/Controllers/PostController';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -32,22 +33,32 @@ const isAdmin = computed(() => page.props.auth?.is_admin ?? false);
 
 const postNavItems = computed<NavItem[]>(() => [
     {
+        title: 'Semua',
+        href: '/admin/posts',
+        icon: Signpost,
+        visible: isAdmin.value,
+    },
+    {
         title: 'Aktif',
         href: PostController.index(),
         icon: Signpost,
+        visible: !isAdmin.value,
     },
     {
         title: 'Arsip',
         href: PostController.archived(),
         icon: Archive,
-    },
-    {
-        title: 'Semua Post',
-        href: '/admin/posts',
-        icon: Signpost,
         visible: isAdmin.value,
     }
 ]);
+
+const settingNavItems: NavItem[] = [
+    {
+        title: 'Kategori Artikel',
+        href: CategoryController.index(),
+        icon: Tag,
+    },
+];
 
 const footerNavItems: NavItem[] = [];
 
@@ -71,6 +82,7 @@ const footerNavItems: NavItem[] = [];
         <SidebarContent>
             <NavMain :items="mainNavItems" />
             <NavMain :items="postNavItems" label="Post" />
+            <NavMain :items="settingNavItems" label="Pengaturan" v-if="isAdmin" />
         </SidebarContent>
 
         <SidebarFooter>

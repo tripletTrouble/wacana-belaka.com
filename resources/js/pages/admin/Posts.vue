@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { watchDebounced } from '@vueuse/core';
-import { ref } from 'vue';
+import { onUnmounted, ref } from 'vue';
+import { toast } from 'vue-sonner';
 import Heading from '@/components/Heading.vue';
 import { Input } from '@/components/ui/input';
+import { Pagination } from '@/components/ui/pagination';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
   Table,
   TableHead,
@@ -16,7 +19,6 @@ import {
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { PaginatedPosts } from '@/types/laravel';
 import { formatRelative } from '@/utils/datetime';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 interface Props {
   posts: PaginatedPosts,
@@ -33,11 +35,27 @@ function submit() {
 }
 
 watchDebounced([q, status], submit, { debounce: 500 });
+
+const breadcrumbs = [
+  { title: 'Artikel', href: '/admin/posts' },
+];
+
+onUnmounted(router.on('flash', (event) => {
+  if (event.detail.flash.success) {
+    toast.success(event.detail.flash.success);
+    return;
+  }
+
+  if (event.detail.flash.error) {
+    toast.error(event.detail.flash.error);
+    return;
+  }
+}));
 </script>
 
 <template>
-  <Head title="Posts" />
-  <AppLayout>
+  <Head title="Artikel" />
+  <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-4">
       <div class="flex justify-between items-start">
         <Heading title="Semua Tulisan" description="Daftar semua tulisan di situs" />
@@ -84,6 +102,10 @@ watchDebounced([q, status], submit, { debounce: 500 });
             <TableEmpty v-if="!posts?.data || posts.data.length === 0" :colspan="5">Belum ada tulisan.</TableEmpty>
           </TableBody>
         </Table>
+        <div class="mt-4 flex items-center justify-end">
+          <Pagination :links="posts.links" :prev-url="posts.prev_page_url"
+            :next-url="posts.next_page_url" />
+        </div>
       </div>
     </div>
   </AppLayout>

@@ -69,8 +69,10 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        return Inertia::render('posts/Show', [
-            'post' => $post->load(['category', 'media', 'user'])
+        $post->content = (new \Tiptap\Editor)->setContent($post->content)->getHTML();
+        return Inertia::render('articles/Preview', [
+            'post' => $post->load(['category', 'media', 'user'])->append('featured_image'),
+            'categories' => fn() => PostCategory::all()
         ]);
     }
 
@@ -163,7 +165,7 @@ class PostController extends Controller
 
         Inertia::flash('success', 'Postingan berhasil dihapus.');
 
-        return back();
+        return redirect()->to(route('admin.posts.index'));
     }
 
     public function forceDelete(string $id)
@@ -180,7 +182,9 @@ class PostController extends Controller
 
         $post->forceDelete();
 
-        return back()->with('success', 'Postingan berhasil dihapus permanen.');
+        Inertia::flash('success', 'Postingan berhasil dihapus permanen.');
+
+        return back();
     }
 
     public function archived()
@@ -244,8 +248,12 @@ class PostController extends Controller
         return back();
     }
 
-    public function togglePublish(Post $post)
+    public function togglePublish(Post $post, Request $request)
     {
+        $validated = $request->validate([
+            'category' => 'nullable|exists:post_categories,id',
+        ]);
+
         $post->load('user');
 
         // Authorize: only owner can toggle publish status
@@ -256,11 +264,12 @@ class PostController extends Controller
             return back();
         }
 
-        $post->is_published = ! $post->is_published;
+        $post->published_at = $post->is_published ? null : now();
+        $post->post_category_id = Arr::get($validated, 'category', $post->post_category_id);
         $post->save();
 
         Inertia::flash('success', 'Status publikasi postingan berhasil diubah.');
 
-        return back();
+        return redirect()->route('posts.index');
     }
 }

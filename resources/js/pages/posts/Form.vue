@@ -15,8 +15,8 @@ import { TagsInput, TagsInputInput, TagsInputItem, TagsInputItemDelete, TagsInpu
 import { Textarea } from '@/components/ui/textarea';
 import { TiptapContent, TiptapProvider, TiptapStatusBar, TiptapToolbar } from '@/components/ui/tiptap';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { BreadcrumbItem } from '@/types';
 import type { Post } from '@/types/laravel';
+import type { BreadcrumbItem } from '@/types/navigation';
 
 const props = defineProps<{
   post?: Post
@@ -138,7 +138,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
   <Head title="Create post" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <Form v-bind="form" @submit="handleSubmit" v-slot="{ processing }">
+    <Form @submit="handleSubmit" v-slot="{ processing }">
       <div class="p-8">
       <Heading title="Tulisan baru" description="Buat tulisan terbaikmu, sekarang!" />
       <div class="grid space-y-3 mb-4">
@@ -154,7 +154,7 @@ const breadcrumbs: BreadcrumbItem[] = [
               <div class="relative w-full max-w-md">
                 <img :src="previewUrl" alt="Preview" class="w-full h-auto max-h-[60vh] object-contain rounded-md" />
                 <div class="absolute top-2 right-2 flex gap-2">
-                  <Button size="sm" variant="destructive" @click="removeImage">
+                  <Button type="button" size="sm" variant="destructive" @click="removeImage">
                     <Trash2 class="size-4" />
                   </Button>
                 </div>
@@ -167,7 +167,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   <span class="text-sm">Tidak ada gambar</span>
                 </div>
                 <div class="flex gap-2 justify-center">
-                  <Button variant="outline" @click="triggerFileInput">
+                  <Button type="button" variant="outline" @click="triggerFileInput">
                     <Upload />
                     Unggah
                   </Button>

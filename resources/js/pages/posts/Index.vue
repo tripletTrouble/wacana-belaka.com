@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Table,
   TableHead,
@@ -23,8 +24,8 @@ import {
 } from '@/components/ui/table';
 import { confirm } from '@/composables/useConfirm';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { BreadcrumbItem } from '@/types';
 import type { PaginatedPosts } from '@/types/laravel';
+import type { BreadcrumbItem } from '@/types/navigation';
 import { formatRelative } from '@/utils/datetime';
 
 interface Props {
@@ -52,7 +53,7 @@ async function openDelete(post: any) {
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: 'Posts',
+    title: 'Artikel',
     href: PostController.index().url,
   },
 ];
@@ -129,6 +130,10 @@ onUnmounted(router.on('flash', (event) => {
             <TableEmpty v-if="!posts?.data || posts.data.length === 0" :colspan="5">Belum ada tulisan.</TableEmpty>
           </TableBody>
         </Table>
+        <div class="mt-4 flex items-center justify-end">
+          <Pagination :links="posts.links" :prev-url="posts.prev_page_url"
+            :next-url="posts.next_page_url" />
+        </div>
       </div>
     </div>
   </AppLayout>

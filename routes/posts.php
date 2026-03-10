@@ -14,8 +14,8 @@ Route::middleware('auth')
         Route::put('/posts/{post}', 'update');
         Route::post('/posts/{post}/restore', 'restore')->name('posts.restore');
         Route::delete('/posts/{post}/force', 'forceDelete')->name('posts.force');
-        Route::delete('/posts/{post}', 'destroy');
+        Route::delete('/posts/{post}', 'destroy')->name('posts.destroy');
         Route::get('/posts/{post}', 'show')->name('posts.show');
-        Route::post('/posts/{post}/toggle-publish', 'togglePublish')->name('posts.toggle-publish');
+        Route::patch('/posts/{post}/toggle-publish', 'togglePublish')->name('posts.toggle-publish');
         Route::get('/admin/posts', 'adminIndex')->name('admin.posts.index')->middleware(['role:' . RoleEnum::ADMIN->value]);
     });

@@ -74,8 +74,7 @@ async function removeCategory(cat: Category) {
 }
 
 const breadcrumbs = [
-  { title: 'Settings', href: '/settings' },
-  { title: 'Categories', href: '' },
+  { title: 'Kategori Artikel', href: '' },
 ];
 
 function handleSubmit() {

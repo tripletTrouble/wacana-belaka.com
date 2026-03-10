@@ -6,7 +6,6 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 import PostController from '@/actions/App/Http/Controllers/PostController';
 import Heading from '@/components/Heading.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { TiptapProvider, TiptapContent } from '@/components/ui/tiptap';
 
 type Post = any;
 
