@@ -37,15 +37,18 @@ withDefaults(
                 </Button>
             </nav>
         </header>
-        <main class="">
-            <section id="hero" class="relative">
-                <img :src="HeroImage" alt="Joyful people collaborating" class="mx-auto mb-8 max-w-full lg:mb-12 h-screen object-cover opacity-30" />
-                <div class="h-screen absolute top-0 right-0 flex flex-col items-center justify-center p-6 lg:p-8">
-                    <h1 class="text-3xl font-bold text-center mb-5 leading-normal">Wahana yang mendukung produktivas dan kreativitas.</h1>
-                    <p class="mb-5 text-center">Nikmati berbagai sarana yang mendukung produktivas dan kreativitasmu di sini. Bergabung sekarang, gratis!</p>
-                    <Button v-if="!$page.props.auth.user" as-child size="lg" class="mt-4 cursor-pointer">
-                        <Link :href="register()">Gabung sekarang!</Link>
-                    </Button>
+        <main class="h-screen">
+            <section id="hero" class="relative h-full">
+                <img :src="HeroImage" alt="Joyful people collaborating" class="mx-auto mb-8 w-screen lg:mb-12 h-full object-cover opacity-30" />
+                <div class="h-full w-screen absolute top-0 flex flex-col items-center justify-center p-6 lg:p-8">
+                    <h1 class="text-3xl lg:text-4xl font-bold text-center mb-5 leading-normal max-w-lg">Wahana yang mendukung produktivas dan kreativitas</h1>
+                    <p class="mb-5 text-center max-w-md lg:text-lg">Nikmati berbagai sarana yang mendukung produktivas dan kreativitasmu di sini. <br/> <strong>Bergabung sekarang, gratis!</strong></p>
+                    <div class="grid grid-cols-2 space-y-3 space-x-4 mt-4 max-w-md">
+                        <Button v-if="!$page.props.auth.user" as-child size="lg" class="cursor-pointer">
+                            <Link :href="register()">Gabung sekarang!</Link>
+                        </Button>
+                        <Button variant="secondary" size="lg" class="font-bold">Jelajahi Tulisan</Button>
+                    </div>
                 </div>
             </section>
         </main>
