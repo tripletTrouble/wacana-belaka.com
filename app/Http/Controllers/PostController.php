@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleEnum;
 use App\Models\Post;
 use App\Models\PostCategory;
 use Illuminate\Http\Request;
@@ -15,8 +16,16 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
+        $posts = Post::with('user')
+            ->when(!$request->user()->hasRole(RoleEnum::ADMIN->value), function ($query) {
+                $query->currentUser();
+            })
+            ->withTrashed()
+            ->paginate(10)
+            ->withQueryString();
+
         return Inertia::render('posts/Index', [
-            'posts' => fn() => Post::with('user')->paginate(10)->withQueryString()
+            'posts' => fn() => $posts
         ]);
     }
 
@@ -102,8 +111,8 @@ class PostController extends Controller
     {
         $post->load('user');
 
-        // Authorize: only owner can update
-        if ($request->user()->id !== $post->user->id) {
+        // Authorize: only admin or owner can update
+        if (!$request->user()->hasRole(RoleEnum::ADMIN->value) && $request->user()->id !== $post->user->id) {
             Inertia::flash('error', 'Anda tidak memiliki izin untuk mengedit postingan ini.');
 
             return back();
@@ -153,15 +162,18 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         $post->load('user');
-        // Authorize: only owner can delete
+        // Authorize: only admin or owner can delete
         $user = auth()->user();
-        if (! $user || $user->id !== $post->user->id) {
+        if (!$user->hasRole(RoleEnum::ADMIN->value) && $user->id !== $post->user->id) {
             Inertia::flash('error', 'Anda tidak memiliki izin untuk menghapus postingan ini.');
 
             return back();
         }
 
-        $post->delete();
+        $post->update([
+            'published_at' => null, // unpublish before deleting
+            'deleted_at' => now()
+        ]);
 
         Inertia::flash('success', 'Postingan berhasil dihapus.');
 
@@ -172,9 +184,9 @@ class PostController extends Controller
     {
         $post = Post::onlyTrashed()->with('user')->findOrFail($id);
 
-        // Authorize: only owner can permanently delete
+        // Authorize: only admin or owner can permanently delete
         $user = auth()->user();
-        if (! $user || $user->id !== $post->user->id) {
+        if (!$user->hasRole(RoleEnum::ADMIN->value) && $user->id !== $post->user->id) {
             Inertia::flash('error', 'Anda tidak memiliki izin untuk menghapus permanen postingan ini.');
 
             return back();
@@ -201,7 +213,7 @@ class PostController extends Controller
     {
         $user = $request->user();
 
-        if (! $user || ! $user->hasRole('admin')) {
+        if (! $user || !$user->hasRole(RoleEnum::ADMIN->value)) {
             abort(403);
         }
 
@@ -233,9 +245,9 @@ class PostController extends Controller
     {
         $post = Post::onlyTrashed()->with('user')->findOrFail($id);
 
-        // Authorize: only owner can restore
+        // Authorize: only owner or admin can restore
         $user = auth()->user();
-        if (! $user || $user->id !== $post->user->id) {
+        if (!$user->hasRole(RoleEnum::ADMIN->value) && $user->id !== $post->user->id) {
             Inertia::flash('error', 'Anda tidak memiliki izin untuk memulihkan postingan ini.');
 
             return back();
@@ -258,7 +270,7 @@ class PostController extends Controller
 
         // Authorize: only owner can toggle publish status
         $user = auth()->user();
-        if (! $user || $user->id !== $post->user->id) {
+        if (!$user->hasRole(RoleEnum::ADMIN->value) && $user->id !== $post->user->id) {
             Inertia::flash('error', 'Anda tidak memiliki izin untuk mengubah status publikasi postingan ini.');
 
             return back();
@@ -270,6 +282,6 @@ class PostController extends Controller
 
         Inertia::flash('success', 'Status publikasi postingan berhasil diubah.');
 
-        return redirect()->route('posts.index');
+        return redirect()->route('admin.posts.index');
     }
 }

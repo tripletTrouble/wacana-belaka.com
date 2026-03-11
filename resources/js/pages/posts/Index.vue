@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { MoreVertical, Edit, Archive, Plus } from 'lucide-vue-next';
+import { MoreVertical, Edit, Trash, Plus } from 'lucide-vue-next';
 import { onUnmounted } from 'vue';
 import { toast } from 'vue-sonner';
 import PostController from '@/actions/App/Http/Controllers/PostController';
 import Heading from '@/components/Heading.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/table';
 import { confirm } from '@/composables/useConfirm';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { resolveStatus } from '@/lib/utils';
 import type { PaginatedPosts } from '@/types/laravel';
 import type { BreadcrumbItem } from '@/types/navigation';
 import { formatRelative } from '@/utils/datetime';
@@ -92,18 +94,18 @@ onUnmounted(router.on('flash', (event) => {
           <TableHeader>
             <TableRow>
               <TableHead>Judul</TableHead>
-              <TableHead>Penulis</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Dibuat</TableHead>
-              <TableHead>Diterbitkan</TableHead>
               <TableHead class="text-center">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow v-for="post in posts.data" :key="post.id">
               <TableCell>{{ post.title }}</TableCell>
-              <TableCell>{{ post.user?.name ?? '—' }}</TableCell>
+              <TableCell>
+                <Badge :variant="resolveStatus(post).variant">{{ resolveStatus(post).text }}</Badge>
+              </TableCell>
               <TableCell>{{ formatRelative(post.created_at) }}</TableCell>
-              <TableCell>{{ formatRelative(post.published_at) }}</TableCell>
               <TableCell class="text-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger as-child>
@@ -113,21 +115,21 @@ onUnmounted(router.on('flash', (event) => {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent side="left">
-                    <DropdownMenuItem as-child>
+                    <DropdownMenuItem as-child v-if="post.deleted_at === null">
                       <Link :href="PostController.edit(post.id).url" class="flex items-center gap-2">
                         <Edit class="size-4" />
                         Edit
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem @click="openDelete(post)" variant="destructive">
-                      <Archive class="size-4" />
-                      Arsipkan
+                      <Trash class="size-4" />
+                      Hapus
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-            <TableEmpty v-if="!posts?.data || posts.data.length === 0" :colspan="5">Belum ada tulisan.</TableEmpty>
+            <TableEmpty v-if="!posts?.data || posts.data.length === 0" :colspan="4">Belum ada tulisan.</TableEmpty>
           </TableBody>
         </Table>
         <div class="mt-4 flex items-center justify-end">

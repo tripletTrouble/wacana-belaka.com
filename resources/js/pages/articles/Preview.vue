@@ -51,7 +51,7 @@ const confirmArchive = async () => {
   <header class="py-5 px-8 flex justify-between border-b-2 items-center">
     <p class="italic">Periksa dengan saksama sebelum menerbitkan artikel.</p>
     <div class="flex gap-4">
-      <Button @click="isOpen = true">Terbitkan</Button>
+      <Button @click="isOpen = true" v-if="!post.published_at">Terbitkan</Button>
       <Button variant="destructive" @click="confirmArchive()">Arsipkan</Button>
     </div>
   </header>

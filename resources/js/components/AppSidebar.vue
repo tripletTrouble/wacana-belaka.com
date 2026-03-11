@@ -39,7 +39,7 @@ const postNavItems = computed<NavItem[]>(() => [
         visible: isAdmin.value,
     },
     {
-        title: 'Aktif',
+        title: 'Tulisan Saya',
         href: PostController.index(),
         icon: Signpost,
         visible: !isAdmin.value,
