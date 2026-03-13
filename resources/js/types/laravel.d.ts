@@ -124,6 +124,7 @@ export interface Post {
   // Spatie media library convenience fields (may be added server-side)
   featured_image?: Media | null;
   media?: Media[];
+  category?: PostCategory | null;
 }
 
 // Convenience aliases

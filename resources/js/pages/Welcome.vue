@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import BlogController from '@/actions/App/Http/Controllers/BlogController';
 import HeroImage from '@/assets/img/hero.webp';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,9 @@ withDefaults(
                         <Button v-if="!$page.props.auth.user" as-child size="lg" class="cursor-pointer">
                             <Link :href="register()">Gabung sekarang!</Link>
                         </Button>
-                        <Button variant="secondary" size="lg" class="font-bold">Jelajahi Tulisan</Button>
+                        <Button variant="secondary" size="lg" class="font-bold" as-child>
+                            <Link :href="BlogController.index()">Jelajahi Tulisan</Link>
+                        </Button>
                     </div>
                 </div>
             </section>

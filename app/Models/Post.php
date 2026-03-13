@@ -16,6 +16,7 @@ class Post extends Model implements HasUser, HasMedia
     use InteractsWithUser, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = ['id', 'created_at', 'updated_at'];
+    protected $appends = ['featured_image'];
 
     public function casts()
     {
@@ -27,7 +28,7 @@ class Post extends Model implements HasUser, HasMedia
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(PostCategory::class, 'category_id');
+        return $this->belongsTo(PostCategory::class, 'post_category_id');
     }
 
     /**
